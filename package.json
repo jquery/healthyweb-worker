@@ -1,5 +1,5 @@
 {
-  "name": "healthyweb-puppeteer",
+  "name": "healthyweb-worker",
   "type": "module",
   "version": "0.0.0",
   "private": true,
