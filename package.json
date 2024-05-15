@@ -5,28 +5,28 @@
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
+    "dev": "wrangler dev --remote",
+    "start": "wrangler dev --remote",
     "test": "vitest",
     "cf-typegen": "wrangler types"
   },
+  "dependencies": {
+    "@cloudflare/puppeteer": "^0.0.7"
+  },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.1.0",
-    "@cloudflare/workers-types": "^4.20240423.0",
-    "@eslint/js": "^9.1.1",
+    "@cloudflare/vitest-pool-workers": "^0.2.10",
+    "@cloudflare/workers-types": "^4.20240512.0",
+    "@eslint/js": "^9.2.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-astro": "^1.1.2",
+    "eslint-plugin-astro": "^1.2.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-tailwindcss": "^3.15.1",
     "prettier": "^3.2.5",
     "prettier-plugin-organize-imports": "^3.2.4",
-    "typescript": "^5.0.4",
-    "typescript-eslint": "^7.8.0",
-    "vitest": "1.3.0",
-    "wrangler": "^3.0.0"
-  },
-  "dependencies": {
-    "@cloudflare/puppeteer": "^0.0.6"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.9.0",
+    "vitest": "1.5",
+    "wrangler": "^3.56.0"
   }
 }

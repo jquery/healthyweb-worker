@@ -19,13 +19,30 @@ export default {
     request: Request,
     env: Env /*, context: ExecutionContext */
   ): Promise<Response> {
-    const inputUrl = new URL(request.url).searchParams.get('url')
-    if (!inputUrl) {
-      return new Response('No URL provided', {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+      })
+    }
+    if (request.method !== 'POST') {
+      return new Response('Method not allowed', {
+        status: 405
+      })
+    }
+    let url: URL
+    try {
+      const json: { url: string } = await request.json()
+      url = normalizeUrl(json.url)
+    } catch (e) {
+      console.error(e)
+      return new Response('Invalid JSON', {
         status: 400
       })
     }
-    const url = normalizeUrl(inputUrl)
     console.log(env)
     const worker = env.HEALTHYWEB as puppeteer.BrowserWorker
 
@@ -76,6 +93,7 @@ export default {
   async getRandomSession(
     endpoint: puppeteer.BrowserWorker
   ): Promise<string | undefined> {
+    console.log(`Getting sessions for ${endpoint}`)
     const sessions: puppeteer.ActiveSession[] =
       await puppeteer.sessions(endpoint)
     console.log(`Sessions: ${JSON.stringify(sessions)}`)
