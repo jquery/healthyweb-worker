@@ -1,12 +1,10 @@
 /**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
  * - Run `npm run dev` in your terminal to start a development server
  * - Open a browser tab at http://localhost:8787/ to see your worker in action
  * - Run `npm run deploy` to publish your worker
  *
  * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
+ * `Env` object can be regenerated with `npm run types`.
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
@@ -17,7 +15,8 @@ import normalizeUrl from './normalizeUrl'
 export default {
   async fetch(
     request: Request,
-    env: Env /*, context: ExecutionContext */
+    env: Env,
+    _context: ExecutionContext
   ): Promise<Response> {
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -38,16 +37,14 @@ export default {
       const json: { url: string } = await request.json()
       url = normalizeUrl(json.url)
     } catch (e) {
-      console.error(e)
-      return new Response('Invalid JSON', {
+      return new Response('Invalid URL', {
         status: 400
       })
     }
-    console.log(env)
     const worker = env.HEALTHYWEB as puppeteer.BrowserWorker
 
     // Pick random session from open sessions
-    const sessionId = await this.getRandomSession(worker)
+    const sessionId = await getRandomSession(worker)
     let browser
     if (sessionId) {
       try {
@@ -68,47 +65,69 @@ export default {
     let version
     try {
       version = await getVersion(page, url)
-    } catch (e) {
-      console.error('Hit an error retriving jQuery version', e)
+      return new Response(
+        JSON.stringify({
+          url,
+          version
+        }),
+        {
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    } catch (error) {
+      const message = ((error as Error)?.message || '').toLowerCase()
+
+      // Better message for URL not found
+      if (message.includes('not_resolved')) {
+        console.log(`404: Not Found for ${url}`)
+        return new Response(JSON.stringify({
+          message: '404: Not Found. Please check the URL.',
+          url
+        }))
+      }
+
+      if (message.includes('timed out') || message.includes('timeout')) {
+        console.log(`Timeout loading ${url}`)
+        return new Response(JSON.stringify({
+          message: 'Timed out waiting for page to load. Please try again.'
+        }))
+      }
+
+      console.log(`Error loading ${url}`)
+      console.error(error)
+
+      return new Response(JSON.stringify({
+        message: 'Error detecting version. Please try again later.'
+      }), {
+        status: 500
+      })
     } finally {
       // All work done, so free connection (IMPORTANT!)
       browser.disconnect()
     }
-
-    return new Response(
-      JSON.stringify({
-        url,
-        version
-      }),
-      {
-        headers: {
-          'content-type': 'application/json'
-        }
-      }
-    )
-  },
-
-  // Pick random free session
-  // Other custom logic could be used instead
-  async getRandomSession(
-    endpoint: puppeteer.BrowserWorker
-  ): Promise<string | undefined> {
-    console.log(`Getting sessions for ${endpoint}`)
-    const sessions: puppeteer.ActiveSession[] =
-      await puppeteer.sessions(endpoint)
-    console.log(`Sessions: ${JSON.stringify(sessions)}`)
-    const sessionsIds = sessions
-      // remove sessions with workers connected to them
-      .filter((v) => !v.connectionId)
-      .map((v) => v.sessionId)
-
-    if (sessionsIds.length === 0) {
-      return
-    }
-
-    const sessionId =
-      sessionsIds[Math.floor(Math.random() * sessionsIds.length)]
-
-    return sessionId
   }
+} satisfies ExportedHandler<Env>
+
+// Pick random free session
+async function getRandomSession(
+  endpoint: puppeteer.BrowserWorker
+): Promise<string | undefined> {
+  const sessions: puppeteer.ActiveSession[] =
+    await puppeteer.sessions(endpoint)
+  console.log('Getting random session', endpoint, sessions)
+  const sessionsIds = sessions
+    // remove sessions with workers connected to them
+    .filter((v) => !v.connectionId)
+    .map((v) => v.sessionId)
+
+  if (sessionsIds.length === 0) {
+    return
+  }
+
+  const sessionId =
+    sessionsIds[Math.floor(Math.random() * sessionsIds.length)]
+
+  return sessionId
 }

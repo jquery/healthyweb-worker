@@ -1,30 +1,70 @@
 // test/index.spec.ts
 import {
   SELF,
-  createExecutionContext,
-  env,
-  waitOnExecutionContext
-} from 'cloudflare:test'
-import { describe, expect, it } from 'vitest'
-import worker from '../src/index'
+  createExecutionContext, env, waitOnExecutionContext
+} from 'cloudflare:test';
+import { describe, expect, it } from 'vitest';
+import worker from "../src/index";
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
-const IncomingRequest = Request<unknown, IncomingRequestCfProperties>
+describe('Healthyweb worker', () => {
 
-describe('Hello World worker', () => {
-  it('responds with Hello World! (unit style)', async () => {
-    const request = new IncomingRequest('http://example.com')
-    // Create an empty context to pass to `worker.fetch()`.
-    const ctx = createExecutionContext()
-    const response = await worker.fetch(request, env, ctx)
-    // Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
-    await waitOnExecutionContext(ctx)
-    expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`)
+  const invalid = [
+    '',
+    'asdf asdf'
+  ]
+
+  invalid.forEach(url => {
+    it(`returns 400 for invalid URL "${url}"`, async () => {
+      const request = new Request('http://example.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url })
+        });
+      const ctx = createExecutionContext();
+      const response = await worker.fetch(request, env, ctx);
+      await waitOnExecutionContext(ctx);
+      expect(response.status).toBe(400);
+    })
   })
 
-  it('responds with Hello World! (integration style)', async () => {
-    const response = await SELF.fetch('https://example.com')
-    expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`)
+  it('returns a 404 message for URL not found', async () => {
+    const request = new Request('http://example.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: 'http://asdf' })
+      });
+    const response = await SELF.fetch('http://example.com', request);
+    const json: { url: string, message: string } = await response.json()
+    expect(json.url).toEqual('http://asdf')
+    expect(json.message).toContain('404')
+  })
+
+  const pass = [
+    'jquery.com',
+    'https://jquery.com',
+    'http://jquery.com'
+  ]
+
+  pass.forEach(url => {
+    it(`retrieves a version for URL "${url}"`, async () => {
+      const request = new Request('http://example.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+      });
+      const ctx = createExecutionContext();
+      const response = await worker.fetch(request, env, ctx);
+      await waitOnExecutionContext(ctx);
+      expect(response.status).toBe(200);
+      const json: { url: string, version: string } = await response.json()
+      expect(json.url).toContain(url)
+      expect(json.version).toMatch(/^\d+\.\d+/);
+    })
   })
 })

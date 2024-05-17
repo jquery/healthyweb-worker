@@ -14,7 +14,14 @@ export default [
     rules: {
       // Turns off rules that conflict with Prettier
       ...prettierConfig.rules,
-      '@typescript-eslint/no-non-null-assertion': 'error'
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'after-used',
+          argsIgnorePattern: '^_'
+        }
+      ],
     }
   }
 ]
