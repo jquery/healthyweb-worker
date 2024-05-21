@@ -16,7 +16,12 @@ describe('Healthyweb worker', () => {
     })
   })
 
-  const pass = ['jquery.com', 'https://jquery.com', 'http://jquery.com']
+  const pass = [
+    'jquery.com',
+    'https://jquery.com',
+    'http://jquery.com',
+    'drupal.org'
+  ]
 
   pass.forEach((url) => {
     it(`retrieves a version for URL "${url}"`, async () => {
