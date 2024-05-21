@@ -6,9 +6,12 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev --remote",
-    "start": "wrangler dev --remote",
+    "format": "eslint . --fix && prettier --write .",
+    "lint": "concurrently \"eslint .\" \"prettier --check .\" \"npm run typescript\"",
+    "start": "npm run dev",
     "test": "vitest",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "typescript": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@cloudflare/puppeteer": "^0.0.7"
@@ -17,6 +20,7 @@
     "@cloudflare/vitest-pool-workers": "^0.2.10",
     "@cloudflare/workers-types": "^4.20240512.0",
     "@eslint/js": "^9.2.0",
+    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-astro": "^1.2.0",

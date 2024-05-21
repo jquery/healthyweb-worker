@@ -18,15 +18,6 @@ export default {
     env: Env,
     _context: ExecutionContext
   ): Promise<Response> {
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST',
-          'Access-Control-Allow-Headers': 'Content-Type'
-        }
-      })
-    }
     if (request.method !== 'POST') {
       return new Response('Method not allowed', {
         status: 405
@@ -82,27 +73,33 @@ export default {
       // Better message for URL not found
       if (message.includes('not_resolved')) {
         console.log(`404: Not Found for ${url}`)
-        return new Response(JSON.stringify({
-          message: '404: Not Found. Please check the URL.',
-          url
-        }))
+        return new Response(
+          JSON.stringify({
+            message: '404: Not Found. Please check the URL.',
+            url
+          })
+        )
       }
 
       if (message.includes('timed out') || message.includes('timeout')) {
         console.log(`Timeout loading ${url}`)
-        return new Response(JSON.stringify({
-          message: 'Timed out waiting for page to load. Please try again.'
-        }))
+        return new Response(
+          JSON.stringify({
+            message: 'Timed out waiting for page to load. Please try again.'
+          })
+        )
       }
 
-      console.log(`Error loading ${url}`)
-      console.error(error)
+      console.error(`Error loading ${url}`, message)
 
-      return new Response(JSON.stringify({
-        message: 'Error detecting version. Please try again later.'
-      }), {
-        status: 500
-      })
+      return new Response(
+        JSON.stringify({
+          message: 'Error detecting version. Please try again later.'
+        }),
+        {
+          status: 500
+        }
+      )
     } finally {
       // All work done, so free connection (IMPORTANT!)
       browser.disconnect()
@@ -114,9 +111,7 @@ export default {
 async function getRandomSession(
   endpoint: puppeteer.BrowserWorker
 ): Promise<string | undefined> {
-  const sessions: puppeteer.ActiveSession[] =
-    await puppeteer.sessions(endpoint)
-  console.log('Getting random session', endpoint, sessions)
+  const sessions: puppeteer.ActiveSession[] = await puppeteer.sessions(endpoint)
   const sessionsIds = sessions
     // remove sessions with workers connected to them
     .filter((v) => !v.connectionId)
@@ -126,8 +121,6 @@ async function getRandomSession(
     return
   }
 
-  const sessionId =
-    sessionsIds[Math.floor(Math.random() * sessionsIds.length)]
-
+  const sessionId = sessionsIds[Math.floor(Math.random() * sessionsIds.length)]
   return sessionId
 }

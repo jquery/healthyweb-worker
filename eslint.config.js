@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 
 export default [
   {
-    ignores: ['dist']
+    ignores: ['.wrangler', 'dist']
   },
   ...tseslint.config(
     eslint.configs.recommended,
@@ -21,7 +21,7 @@ export default [
           args: 'after-used',
           argsIgnorePattern: '^_'
         }
-      ],
+      ]
     }
   }
 ]
