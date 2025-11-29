@@ -8,7 +8,7 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
-import puppeteer from '@cloudflare/puppeteer'
+import * as puppeteer from '@cloudflare/puppeteer'
 import getVersion from './getVersion'
 import normalizeUrl from './normalizeUrl'
 
@@ -27,7 +27,7 @@ export default {
     try {
       const json: { url: string } = await request.json()
       url = normalizeUrl(json.url)
-    } catch (e) {
+    } catch (_e) {
       return new Response('Invalid URL', {
         status: 400
       })

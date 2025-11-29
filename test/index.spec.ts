@@ -38,7 +38,7 @@ describe('Healthyweb worker', () => {
     })
   })
 
-  const noVersion = ['https://google.com', 'http://healthyweb.org']
+  const noVersion = ['https://google.com', 'google.com', 'http://healthyweb.org']
 
   noVersion.forEach((url) => {
     it(`no version found for "${url}"`, async () => {

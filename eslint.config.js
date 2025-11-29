@@ -6,10 +6,8 @@ export default [
   {
     ignores: ['.wrangler', 'dist']
   },
-  ...tseslint.config(
-    eslint.configs.recommended,
-    ...tseslint.configs.recommended
-  ),
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     rules: {
       // Turns off rules that conflict with Prettier
@@ -19,7 +17,8 @@ export default [
         'error',
         {
           args: 'after-used',
-          argsIgnorePattern: '^_'
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
         }
       ]
     }
