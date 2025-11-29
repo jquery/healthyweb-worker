@@ -27,8 +27,7 @@ export default {
     try {
       const json: { url: string } = await request.json()
       url = normalizeUrl(json.url)
-    } catch (e) {
-      console.error('Invalid URL', e)
+    } catch (_e) {
       return new Response('Invalid URL', {
         status: 400
       })

@@ -17,7 +17,8 @@ export default [
         'error',
         {
           args: 'after-used',
-          argsIgnorePattern: '^_'
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
         }
       ]
     }
