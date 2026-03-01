@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 
 export default [
   {
-    ignores: ['.wrangler', 'dist']
+    ignores: ['.wrangler', 'dist', 'worker-configuration.d.ts']
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
