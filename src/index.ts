@@ -9,7 +9,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 import * as puppeteer from '@cloudflare/puppeteer'
-import getVersion from './getVersion'
+import getVersion, { BlockedError } from './getVersion'
 import normalizeUrl from './normalizeUrl'
 
 export default {
@@ -68,6 +68,17 @@ export default {
         }
       )
     } catch (error) {
+      if (error instanceof BlockedError) {
+        console.log(`Blocked by ${url}`)
+        return new Response(
+          JSON.stringify({
+            message:
+              'This site blocked automated access, so jQuery could not be detected.',
+            url
+          })
+        )
+      }
+
       const message = ((error as Error)?.message || '').toLowerCase()
 
       // Better message for URL not found
