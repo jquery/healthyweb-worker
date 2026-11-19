@@ -7,6 +7,11 @@ declare global {
   }
 }
 
+export class BlockedError extends Error {}
+
+// Bot-protection interstitials (Fastly, Cloudflare)
+const challengeTitle = /^(client challenge|just a moment)/i
+
 export default async function getVersion(page: Page, url: URL) {
   function evalVersion() {
     return page.evaluate(() => {
@@ -22,15 +27,25 @@ export default async function getVersion(page: Page, url: URL) {
   await page.setUserAgent(
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
   )
-  await page.goto(url.href, {
+  const response = await page.goto(url.href, {
     timeout: 30000,
     waitUntil: 'load'
   })
-  const version = await evalVersion()
+  let version = await evalVersion()
   if (version) return version
 
   // Wait longer if version not detected
   console.log(`Waiting until network idle for ${url.href}...`)
   await page.waitForNetworkIdle({ idleTime: 100, timeout: 30000 })
-  return evalVersion()
+  version = await evalVersion()
+  if (version) return version
+
+  const status = response?.status()
+  if (
+    status === 403 ||
+    status === 429 ||
+    challengeTitle.test(await page.title())
+  ) {
+    throw new BlockedError(`Blocked by ${url.href}`)
+  }
 }

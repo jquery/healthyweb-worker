@@ -16,12 +16,7 @@ describe('Healthyweb worker', () => {
     })
   })
 
-  const pass = [
-    'jquery.com',
-    'https://jquery.com',
-    'http://jquery.com',
-    'drupal.org'
-  ]
+  const pass = ['jquery.com', 'https://jquery.com', 'http://jquery.com']
 
   pass.forEach((url) => {
     it(`retrieves a version for URL "${url}"`, async () => {
@@ -35,6 +30,24 @@ describe('Healthyweb worker', () => {
       const json: { url: string; version: string } = await response.json()
       expect(json.url).toContain(url)
       expect(json.version).toMatch(/^\d+\.\d+/)
+    })
+  })
+
+  const blocked = ['drupal.org']
+
+  blocked.forEach((url) => {
+    it(`reports blocked for "${url}"`, async () => {
+      const response = await fetch('http://localhost:8787', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+      })
+      const json: { url: string; message: string } = await response.json()
+      expect(json.url).toContain(url)
+      expect(json.message).toMatch(/blocked/i)
+      expect(json).not.toHaveProperty('version')
     })
   })
 
